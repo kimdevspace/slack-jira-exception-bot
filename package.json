@@ -1,0 +1,20 @@
+{
+  "name": "slack-jira-exception-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Slack 모니터링 채널의 런타임 예외를 이모지 반응으로 Jira에 자동 등록 + 스택트레이스 지문 기반 중복제거",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test:parse": "node scripts/test-parse.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.22.0",
+    "dotenv": "^16.4.5"
+  }
+}

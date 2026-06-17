@@ -1,0 +1,9 @@
+{
+  "byKeyword": {
+    "alpha": "Alpha Service",
+    "beta": "Beta Service"
+  },
+  "byChannel": {
+    "C0EXAMPLEID": "Alpha Service"
+  }
+}

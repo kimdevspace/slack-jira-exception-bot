@@ -1,0 +1,28 @@
+# Slack 앱 매니페스트 — https://api.slack.com/apps → Create New App → From a manifest 에 그대로 붙여넣기
+display_information:
+  name: Exception to Jira Bot
+  description: 모니터링 채널 예외 메시지에 티켓 이모지 반응 시 Jira에 자동 등록
+  background_color: "#1d1c1d"
+features:
+  bot_user:
+    display_name: monitoring-bot
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - reactions:read      # reaction_added 이벤트 수신
+      - reactions:write     # 처리 결과 ✅/⚠️ 반응 달기
+      - channels:history    # 공개 채널 메시지 읽기
+      - groups:history      # 비공개 채널 메시지 읽기
+      - chat:write          # 스레드에 결과 답글
+      - users:read          # 이모지 단 사용자 식별
+      - users:read.email    # 사용자 이메일 → Jira accountId 매핑
+settings:
+  event_subscriptions:
+    bot_events:
+      - reaction_added
+  interactivity:
+    is_enabled: false
+  socket_mode_enabled: true   # 공인 URL 불필요 (아웃바운드 WebSocket)
+  org_deploy_enabled: false
+  token_rotation_enabled: false
