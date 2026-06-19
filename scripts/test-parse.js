@@ -65,3 +65,31 @@ console.log(parsed.fingerprint, '===', parsed2.fingerprint, '→', parsed.finger
 // 비-에러 메시지는 null
 console.log('\n--- 일반 잡담 메시지 파싱 ---');
 console.log(parseError('점심 뭐 먹지', 'C0TEST') === null ? 'null 반환 OK ✅' : 'FAIL ❌');
+
+// ── 응답지연 메시지 ──
+const DELAY = `================== 응답 지연 발생 ==================
+[성능 정보]
+  소요 시간     : 8898ms (8.898s)
+  임계치        : 5000ms
+
+[요청 정보]
+  Request URI   : /ptfol/cp/dgns/eb7ddda0ffd43bae614d927845d24850/index.do
+  Request Method: GET
+  Query String  : null
+  Remote IP     : 58.232.149.156
+
+[세션 정보]
+  Session ID    : 3A757A6676241E6F3F7C42A176FF25CE
+  User Name     : 박보영
+====================================================`;
+const d = parseError(DELAY, 'C0TEST');
+console.log('\n--- 응답지연 파싱 ---');
+console.log('kind        :', d?.kind);
+console.log('소요시간    :', d?.elapsed, '/ ms:', d?.elapsedMs, '/ 임계치:', d?.threshold);
+console.log('정규화 URI  :', d?.normalizedUri);
+console.log('지문        :', d?.fingerprint);
+console.log('제목        :', d ? buildTitle(d) : '(null)');
+
+// 다른 엔티티 해시여도 같은 엔드포인트면 지문 동일해야 함
+const d2 = parseError(DELAY.replace('eb7ddda0ffd43bae614d927845d24850', 'ffff1111aaaa2222bbbb3333cccc4444').replace('8898', '7201'), 'C0TEST');
+console.log('다른 id/시간 → 지문 동일?', d.fingerprint === d2.fingerprint ? 'OK ✅' : 'FAIL ❌');

@@ -116,6 +116,8 @@ app.event('reaction_added', async ({ event, client }) => {
     const devId = await jira.resolveAccountId(reactor.email);
     const ownerId = devId || (await jira.defaultAccountId());
 
+    const kindLabel = parsed.kind === 'delay' ? '응답지연' : '예외';
+
     // 지문으로 기존 이슈 검색 → 재발생 or 신규
     const existing = await jira.findByFingerprint(parsed.fingerprint);
     let result, isNew;
@@ -125,6 +127,7 @@ app.event('reaction_added', async ({ event, client }) => {
         occurredAt,
         remoteIp: parsed.remoteIp,
         byName: reactor.name,
+        kindLabel,
       });
       isNew = false;
     } else {
@@ -147,14 +150,17 @@ app.event('reaction_added', async ({ event, client }) => {
     const dropNote = result.droppedFields?.length
       ? `\n⚠️ 권한 부족으로 ${result.droppedFields.join('/')} 지정이 생략됐습니다(보고자 수정 권한 확인 필요).`
       : '';
+    const summary = parsed.kind === 'delay'
+      ? `${parsed.service || '서비스 미상'} · 응답지연 ${parsed.elapsed || ''} · ${parsed.requestUri}`
+      : `${parsed.service || '서비스 미상'} · ${parsed.exceptionType} · ${parsed.source}`;
     await client.chat.postMessage({
       channel,
       thread_ts: ts,
       text: isNew
-        ? `✅ Jira 등록 완료 → <${result.url}|${result.key}>\n• ${parsed.service || '서비스 미상'} · ${parsed.exceptionType} · ${parsed.source}\n• 보고자/담당자: ${reactor.name}${whoNote}${dropNote}`
-        : `♻️ 이미 등록된 예외입니다 → <${result.url}|${result.key}> (재발생 ${result.count}회째 기록 by ${reactor.name})`,
+        ? `✅ Jira 등록 완료 → <${result.url}|${result.key}>\n• ${summary}\n• 보고자/담당자: ${reactor.name}${whoNote}${dropNote}`
+        : `♻️ 이미 등록된 ${kindLabel}입니다 → <${result.url}|${result.key}> (재발생 ${result.count}회째 기록 by ${reactor.name})`,
     });
-    console.log(`[${isNew ? 'CREATE' : 'RECUR'}] ${result.key} fp=${parsed.fingerprint} ${parsed.service} ${parsed.exceptionType}`);
+    console.log(`[${isNew ? 'CREATE' : 'RECUR'}] ${result.key} fp=${parsed.fingerprint} ${kindLabel} ${parsed.service} ${parsed.exceptionType || parsed.normalizedUri}`);
   } catch (err) {
     console.error('처리 실패:', err);
     await addReaction(client, channel, ts, 'warning');

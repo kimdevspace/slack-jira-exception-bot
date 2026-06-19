@@ -32,12 +32,18 @@ function doc(content) {
  * @param {object} opts { slackUrl, occurredAt, appendSkeleton }
  */
 export function buildDescriptionAdf(p, { slackUrl, occurredAt, appendSkeleton } = {}) {
-  const facts = [
-    [strong('예외'), text(`  ${p.exceptionTypeFull || p.exceptionType}`)],
-    [strong('발생 위치'), text(`  ${p.source || (p.topFrame ? p.topFrame.raw : '-')}`)],
-    [strong('요청'), text(`  ${p.requestMethod || ''} ${p.requestUri || '-'}`)],
-  ];
-  if (p.message && p.message !== 'No message available') facts.push([strong('메시지'), text(`  ${p.message}`)]);
+  const isDelay = p.kind === 'delay';
+  const facts = [];
+  if (isDelay) {
+    facts.push([strong('소요 시간'), text(`  ${p.elapsed || (p.elapsedMs ? p.elapsedMs + 'ms' : '-')}`)]);
+    if (p.threshold) facts.push([strong('임계치'), text(`  ${p.threshold}`)]);
+    facts.push([strong('요청'), text(`  ${p.requestMethod || ''} ${p.requestUri || '-'}`)]);
+  } else {
+    facts.push([strong('예외'), text(`  ${p.exceptionTypeFull || p.exceptionType}`)]);
+    facts.push([strong('발생 위치'), text(`  ${p.source || (p.topFrame ? p.topFrame.raw : '-')}`)]);
+    facts.push([strong('요청'), text(`  ${p.requestMethod || ''} ${p.requestUri || '-'}`)]);
+    if (p.message && p.message !== 'No message available') facts.push([strong('메시지'), text(`  ${p.message}`)]);
+  }
   if (p.remoteIp) facts.push([strong('발생 IP'), text(`  ${p.remoteIp}`)]);
   if (occurredAt) facts.push([strong('발생 시각'), text(`  ${occurredAt}`)]);
 
@@ -50,9 +56,11 @@ export function buildDescriptionAdf(p, { slackUrl, occurredAt, appendSkeleton } 
     content.push(bulletList(paramEntries.map(([k, v]) => [strong(k), text(` : ${v}`)])));
   }
 
-  // 스택 트레이스
-  content.push(heading(4, '스택 트레이스'));
-  content.push(codeBlock(p.stackTrace, 'java'));
+  // 스택 트레이스 (예외 종류만)
+  if (!isDelay) {
+    content.push(heading(4, '스택 트레이스'));
+    content.push(codeBlock(p.stackTrace, 'java'));
+  }
 
   // 출처 링크
   const refs = [];
@@ -82,8 +90,8 @@ export function buildDescriptionAdf(p, { slackUrl, occurredAt, appendSkeleton } 
 }
 
 /** 재발생 코멘트 본문 */
-export function buildRecurrenceAdf({ occurredAt, remoteIp, slackUrl, count, byName }) {
-  const line = [strong('🔁 동일 예외 재발생 감지')];
+export function buildRecurrenceAdf({ occurredAt, remoteIp, slackUrl, count, byName, kindLabel = '예외' }) {
+  const line = [strong(`🔁 동일 ${kindLabel} 재발생 감지`)];
   if (count) line.push(text(`  (누적 ${count}회)`));
   const info = [];
   if (occurredAt) info.push([strong('시각'), text(`  ${occurredAt}`)]);

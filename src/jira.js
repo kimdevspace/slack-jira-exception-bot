@@ -86,6 +86,7 @@ export class JiraClient {
       this.fingerprintLabel(parsed.fingerprint),
       `${OCCUR_PREFIX}1`,
     ];
+    if (parsed.kind === 'delay') labels.push(config.jira.delayLabel);
     const description = buildDescriptionAdf(parsed, {
       slackUrl,
       occurredAt,
@@ -119,7 +120,7 @@ export class JiraClient {
   }
 
   /** 기존 이슈에 재발생 기록: occur-N 라벨 증가 + 코멘트 추가 → {key, url, count} */
-  async recordRecurrence(existing, { slackUrl, occurredAt, remoteIp, byName }) {
+  async recordRecurrence(existing, { slackUrl, occurredAt, remoteIp, byName, kindLabel }) {
     const { key, labels } = existing;
     let count = 1;
     const occurLabel = labels.find((l) => l.startsWith(OCCUR_PREFIX));
@@ -137,7 +138,7 @@ export class JiraClient {
 
     // 재발생 코멘트
     await this._req('POST', `/rest/api/3/issue/${key}/comment`, {
-      body: buildRecurrenceAdf({ occurredAt, remoteIp, slackUrl, count: next, byName }),
+      body: buildRecurrenceAdf({ occurredAt, remoteIp, slackUrl, count: next, byName, kindLabel }),
     });
 
     return { key, url: `${this.base}/browse/${key}`, count: next };

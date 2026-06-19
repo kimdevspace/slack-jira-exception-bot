@@ -30,6 +30,8 @@ export const config = {
     assigneeEmail: process.env.JIRA_ASSIGNEE_EMAIL || process.env.JIRA_EMAIL,
     defaultLabels: list('JIRA_DEFAULT_LABELS', 'monitoring'),
     fingerprintPrefix: process.env.FINGERPRINT_LABEL_PREFIX || 'autoexc-',
+    // 응답지연 티켓에 추가로 붙일 구분 라벨
+    delayLabel: process.env.DELAY_LABEL || 'performance',
   },
   // 스택트레이스에서 '내 애플리케이션' 프레임을 식별할 패키지 prefix (예: com.mycompany)
   appPackagePrefix: process.env.APP_PACKAGE_PREFIX || 'com.example',
